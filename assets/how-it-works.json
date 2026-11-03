@@ -1,0 +1,37 @@
+{
+  "title": "How animated-diagram works",
+  "optimize_order": true,
+  "groups": [
+    {"id": "input", "title": "Input", "color": "purple"},
+    {"id": "spec", "title": "Spec", "color": "blue"},
+    {"id": "render", "title": "Render", "color": "green"},
+    {"id": "output", "title": "Check and capture", "color": "orange"}
+  ],
+  "nodes": [
+    {"id": "mmd", "group": "input", "label": "Mermaid", "sub": "flowchart code", "icon": "terminal"},
+    {"id": "text", "group": "input", "label": "Text", "sub": "plain description", "icon": "chat-bot"},
+    {"id": "image", "group": "input", "label": "Image", "sub": "screenshot, photo", "icon": "browser"},
+    {"id": "converter", "group": "spec", "label": "mermaid_to_spec.py", "sub": "parse flowchart", "icon": "poller"},
+    {"id": "agent", "group": "spec", "label": "Agent", "sub": "reads text, image", "icon": "llm"},
+    {"id": "spec", "group": "spec", "label": "spec.json", "sub": "groups, nodes, edges", "icon": "api"},
+    {"id": "icons", "group": "render", "label": "Icon library", "sub": "one per node", "icon": "plug"},
+    {"id": "maker", "group": "render", "label": "make_diagram.py", "sub": "layout, packets", "icon": "service-graph"},
+    {"id": "svg", "group": "render", "label": "Animated SVG", "sub": "SMIL, 6 s loop", "icon": "browser"},
+    {"id": "check", "group": "output", "label": "check.py", "sub": "layout check", "icon": "shield-check"},
+    {"id": "capture", "group": "output", "label": "capture.py", "sub": "Playwright, Pillow", "icon": "chip"},
+    {"id": "gif", "group": "output", "label": "GIF", "sub": "seamless loop", "icon": "storage"}
+  ],
+  "edges": [
+    {"from": "mmd", "to": "converter", "label": "flowchart"},
+    {"from": "text", "to": "agent", "label": "words"},
+    {"from": "image", "to": "agent", "label": "pixels"},
+    {"from": "converter", "to": "spec", "label": "convert"},
+    {"from": "agent", "to": "spec", "label": "writes"},
+    {"from": "spec", "to": "maker", "label": "render"},
+    {"from": "icons", "to": "maker", "label": "icons"},
+    {"from": "maker", "to": "svg", "label": "SMIL"},
+    {"from": "svg", "to": "check", "label": "verify"},
+    {"from": "check", "to": "capture", "label": "pass"},
+    {"from": "capture", "to": "gif", "label": "frames"}
+  ]
+}

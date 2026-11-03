@@ -1,0 +1,32 @@
+%% Chat service with a self-improving playbook, redrawn from its Mermaid sequenceDiagram.
+%% make_diagram.py draws structure, not message order, so the sequence became a flowchart:
+%%   participants -> nodes (alias kept as the sub-label), messages -> edges with their text,
+%%   API->>RD twice (save_user_message, save_ai_message) -> one edge naming both,
+%%   LG self-call "evaluator -> reflector -> curator" -> learning_graph sub-label,
+%%   SG self-calls (router_node, generator_node, ...) and alt/opt blocks -> not drawn.
+%% Columns are a grouping choice; the sequence diagram has no groups.
+%% No keyword matches serving_graph or learning_graph, so the .json sets their icons after conversion:
+%% SG -> service-graph (core), LG -> learning (drawn: examples/icons/learning.py, pass with --extra-icons).
+flowchart LR
+    subgraph Client
+        UI["web/app.py<br/>UI"]
+    end
+    subgraph API
+        MAIN["main.py<br/>API"]
+        RD[("Redis<br/>memory")]
+    end
+    subgraph Graphs
+        SG[serving_graph]
+        LG["learning_graph<br/>evaluator → reflector → curator"]
+    end
+    subgraph Playbook
+        ST[("Qdrant + SQL<br/>playbook")]
+    end
+    UI -->|POST /chat/stream| MAIN
+    MAIN -->|SSE data| UI
+    MAIN -->|save_user_message / save_ai_message| RD
+    MAIN -->|solution_stream| SG
+    SG -->|token 스트림| MAIN
+    SG -->|bullet 검색| ST
+    MAIN -.->|run_background_learning| LG
+    LG -->|update_playbook_node| ST

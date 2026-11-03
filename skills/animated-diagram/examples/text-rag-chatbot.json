@@ -1,0 +1,132 @@
+{
+  "_comment": "Extracted by Claude from this plain-text request: '사용자가 웹앱에서 질문하면 API Gateway를 거쳐 Orchestrator가 Redis 캐시를 확인하고, 없으면 Vector DB 검색과 LLM 호출을 하고, 대화 로그는 Kafka 이벤트 큐를 통해 S3에 쌓는다. 사내 ERP와도 동기화한다. 응답은 Gateway에서 웹앱으로 돌아간다.'",
+  "title": "RAG Chatbot",
+  "optimize_order": true,
+  "groups": [
+    {
+      "id": "users",
+      "title": "Users",
+      "color": "purple"
+    },
+    {
+      "id": "edge",
+      "title": "Edge",
+      "color": "orange"
+    },
+    {
+      "id": "core",
+      "title": "Core",
+      "color": "blue"
+    },
+    {
+      "id": "data",
+      "title": "Models & Data",
+      "color": "green"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "user",
+      "group": "users",
+      "label": "User"
+    },
+    {
+      "id": "web",
+      "group": "users",
+      "label": "Web App",
+      "sub": "Next.js"
+    },
+    {
+      "id": "gw",
+      "group": "edge",
+      "label": "API Gateway"
+    },
+    {
+      "id": "orch",
+      "group": "core",
+      "label": "Orchestrator",
+      "sub": "RAG pipeline",
+      "icon": "service-graph"
+    },
+    {
+      "id": "cache",
+      "group": "core",
+      "label": "Redis Cache"
+    },
+    {
+      "id": "llm",
+      "group": "data",
+      "label": "LLM Provider"
+    },
+    {
+      "id": "vdb",
+      "group": "data",
+      "label": "Vector DB",
+      "shape": "cylinder"
+    },
+    {
+      "id": "q",
+      "group": "data",
+      "label": "Event Queue",
+      "sub": "Kafka"
+    },
+    {
+      "id": "s3",
+      "group": "data",
+      "label": "Object Storage",
+      "sub": "S3"
+    },
+    {
+      "id": "erp",
+      "group": "data",
+      "label": "ERP",
+      "sub": "사내 시스템",
+      "icon": "server"
+    }
+  ],
+  "edges": [
+    {
+      "from": "user",
+      "to": "web"
+    },
+    {
+      "from": "web",
+      "to": "gw"
+    },
+    {
+      "from": "gw",
+      "to": "orch"
+    },
+    {
+      "from": "orch",
+      "to": "cache",
+      "label": "hit?"
+    },
+    {
+      "from": "orch",
+      "to": "vdb"
+    },
+    {
+      "from": "orch",
+      "to": "llm"
+    },
+    {
+      "from": "orch",
+      "to": "q"
+    },
+    {
+      "from": "q",
+      "to": "s3"
+    },
+    {
+      "from": "orch",
+      "to": "erp",
+      "label": "동기화"
+    },
+    {
+      "from": "gw",
+      "to": "web",
+      "label": "response"
+    }
+  ]
+}

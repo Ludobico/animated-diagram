@@ -1,0 +1,104 @@
+{
+  "optimize_order": true,
+  "groups": [
+    {
+      "id": "Client",
+      "title": "Client"
+    },
+    {
+      "id": "API",
+      "title": "API"
+    },
+    {
+      "id": "Graphs",
+      "title": "Graphs"
+    },
+    {
+      "id": "Playbook",
+      "title": "Playbook"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "UI",
+      "label": "web/app.py",
+      "sub": "UI",
+      "group": "Client"
+    },
+    {
+      "id": "MAIN",
+      "label": "main.py",
+      "sub": "API",
+      "group": "API"
+    },
+    {
+      "id": "RD",
+      "label": "Redis",
+      "sub": "memory",
+      "shape": "cylinder",
+      "group": "API"
+    },
+    {
+      "id": "SG",
+      "label": "serving_graph",
+      "group": "Graphs",
+      "icon": "service-graph"
+    },
+    {
+      "id": "LG",
+      "label": "learning_graph",
+      "sub": "evaluator → reflector → curator",
+      "group": "Graphs",
+      "icon": "learning"
+    },
+    {
+      "id": "ST",
+      "label": "Qdrant + SQL",
+      "sub": "playbook",
+      "shape": "cylinder",
+      "group": "Playbook"
+    }
+  ],
+  "edges": [
+    {
+      "from": "UI",
+      "to": "MAIN",
+      "label": "POST /chat/stream"
+    },
+    {
+      "from": "MAIN",
+      "to": "UI",
+      "label": "SSE data"
+    },
+    {
+      "from": "MAIN",
+      "to": "RD",
+      "label": "save_user_message / save_ai_message"
+    },
+    {
+      "from": "MAIN",
+      "to": "SG",
+      "label": "solution_stream"
+    },
+    {
+      "from": "SG",
+      "to": "MAIN",
+      "label": "token 스트림"
+    },
+    {
+      "from": "SG",
+      "to": "ST",
+      "label": "bullet 검색"
+    },
+    {
+      "from": "MAIN",
+      "to": "LG",
+      "label": "run_background_learning"
+    },
+    {
+      "from": "LG",
+      "to": "ST",
+      "label": "update_playbook_node"
+    }
+  ]
+}
