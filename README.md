@@ -43,6 +43,11 @@ The animation above is the pipeline, drawn by this skill from [`assets/how-it-wo
 
 The scripts are in [`skills/animated-diagram/scripts`](skills/animated-diagram/scripts).
 
+> [!NOTE]
+> It draws structure, not message order or step-by-step state changes. A sequence diagram is redrawn as
+> a flowchart of its participants and messages. Layout limits and what has been verified are in
+> [`references/limits.md`](skills/animated-diagram/references/limits.md).
+
 ## Install
 
 Paste this into your coding agent (Claude Code, Codex, Cursor and other agents that support
@@ -126,19 +131,19 @@ renders, checks, and captures. Worked examples are in
 
 ### Options
 
-| Choice | Values | Effect |
-|---|---|---|
-| Lines | `static` | Lines, arrowheads and labels are visible from the first frame. Only packets move. |
-| | `draw` | Lines draw on, packets flow, then the lines fade out and the loop repeats. |
-| Theme | `light`, `dark` | `dark` uses GitHub's dark background, so it blends into a README. |
-| | both | Render both and let the README switch with the viewer's mode (snippet below). |
+| Choice | Values          | Effect                                                                            |
+| ------ | --------------- | --------------------------------------------------------------------------------- |
+| Lines  | `static`        | Lines, arrowheads and labels are visible from the first frame. Only packets move. |
+|        | `draw`          | Lines draw on, packets flow, then the lines fade out and the loop repeats.        |
+| Theme  | `light`, `dark` | `dark` uses GitHub's dark background, so it blends into a README.                 |
+|        | both            | Render both and let the README switch with the viewer's mode (snippet below).     |
 
 To switch with the viewer's mode, embed the two GIFs like this:
 
 ```html
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagram-dark.gif">
-  <img src="diagram-light.gif" alt="architecture diagram">
+  <source media="(prefers-color-scheme: dark)" srcset="diagram-dark.gif" />
+  <img src="diagram-light.gif" alt="architecture diagram" />
 </picture>
 ```
 
@@ -153,19 +158,78 @@ queue, and so on). Set `"icon"` on a node to pick another. If nothing fits, the 
 the same style for that job only. The full list is in
 [`references/icons.md`](skills/animated-diagram/references/icons.md).
 
-## Limitations
+## Examples
 
-- Layout is always left-to-right columns, one per group. A top-down Mermaid diagram is redrawn that way.
-- Readability drops past about 7 nodes per column, 25 nodes or 6 columns. Split bigger diagrams.
-- An edge that skips a column can run over a node in between, and `check.py` fails it. Reorder the
-  groups or split the diagram.
-- Some crossings cannot be avoided, for example two sources that both feed the same two targets.
+### From Mermaid
 
-> [!WARNING]
-> Image input is read by the agent, and nothing checks the result automatically. The agent lists what it
-> inferred and asks before it renders, but check the node and edge list yourself.
+> Turn `examples/mermaid-architecture.mmd` into an animated GIF
 
-More on layout and verified scope: [`references/limits.md`](skills/animated-diagram/references/limits.md).
+([`mermaid-architecture.mmd`](skills/animated-diagram/examples/mermaid-architecture.mmd)).
+
+<details>
+<summary>Mermaid input</summary>
+
+```text
+flowchart LR
+    subgraph Client
+        UI["web/app.py<br/>UI"]
+    end
+    subgraph API
+        MAIN["main.py<br/>API"]
+        RD[("Redis<br/>memory")]
+    end
+    subgraph Graphs
+        SG[serving_graph]
+        LG["learning_graph<br/>evaluator → reflector → curator"]
+    end
+    subgraph Playbook
+        ST[("Qdrant + SQL<br/>playbook")]
+    end
+    UI -->|POST /chat/stream| MAIN
+    MAIN -->|SSE data| UI
+    MAIN -->|save_user_message / save_ai_message| RD
+    MAIN -->|solution_stream| SG
+    SG -->|token 스트림| MAIN
+    SG -->|bullet 검색| ST
+    MAIN -.->|run_background_learning| LG
+    LG -->|update_playbook_node| ST
+```
+
+</details>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/example-mermaid-dark.gif">
+    <img src="assets/example-mermaid-light.gif" alt="Animated architecture diagram of a chat service: client, API, graphs and playbook" width="900">
+  </picture>
+</p>
+
+### From a description
+
+> Draw the structure of a CPU processor with an ALU, registers and L1 to L3 caches, and a diagram of it
+> talking to DRAM over a bus. Lines should be absent at first and then connect. Use the light theme.
+
+The prompt names the line style and the theme, so the agent does not ask about them. It only asks about what
+the prompt leaves open, here which way the arrows run inside the CPU. They follow the request path outward,
+and the bus links run both ways.
+
+<p align="center">
+  <img src="assets/example-cpu-en.gif" alt="Animated diagram of a CPU with ALU, registers and L1 to L3 caches, connected to DRAM over a memory bus" width="900">
+</p>
+
+### From an image
+
+> (attach the picture) Turn this diagram into an animated GIF. Light theme, with the lines connected from
+> the start.
+
+The input was Figure 1 of [Attention Is All You Need](https://arxiv.org/abs/1706.03762) (Vaswani et al.,
+2017). The original figure is not part of this repository. The skill redraws its structure, and it lists what
+it read from the picture and what it left out before it renders. Here it left out the residual skip lines,
+because the Add & Norm nodes stand for them.
+
+<p align="center">
+  <img src="assets/example-transformer-en.gif" alt="Animated diagram of the Transformer architecture: encoder, decoder, embeddings, attention, feed forward, linear and softmax" width="900">
+</p>
 
 ## Requirements
 

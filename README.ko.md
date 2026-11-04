@@ -43,6 +43,11 @@
 
 스크립트는 [`skills/animated-diagram/scripts`](skills/animated-diagram/scripts)에 있습니다.
 
+> [!NOTE]
+> 구조를 그리는 도구이며, 메시지 순서나 단계별 상태 변화는 그리지 않습니다. 시퀀스 다이어그램은 참여자와
+> 메시지를 플로우차트로 바꿔 다시 그립니다. 레이아웃 한계와 검증 범위는
+> [`references/limits.md`](skills/animated-diagram/references/limits.md)에 있습니다.
+
 ## 설치
 
 코딩 에이전트(Claude Code, Codex, Cursor 등 [Agent Skills](https://agentskills.io)를 지원하는 에이전트)에
@@ -125,19 +130,19 @@ New-Item -ItemType Junction -Path "$HOME\.codex\skills\animated-diagram" -Target
 
 ### 옵션
 
-| 선택 | 값 | 효과 |
-|---|---|---|
-| 선 | `static` | 선, 화살표, 라벨이 첫 프레임부터 보입니다. 패킷만 움직입니다. |
-| | `draw` | 선이 그려지고 패킷이 흐른 뒤, 선이 사라지며 반복됩니다. |
-| 테마 | `light`, `dark` | `dark`는 GitHub 다크 배경을 써서 README에 자연스럽게 섞입니다. |
-| | 둘 다 | 둘 다 만들어 README가 뷰어의 모드에 맞춰 바뀌게 합니다(아래 스니펫). |
+| 선택 | 값              | 효과                                                                 |
+| ---- | --------------- | -------------------------------------------------------------------- |
+| 선   | `static`        | 선, 화살표, 라벨이 첫 프레임부터 보입니다. 패킷만 움직입니다.        |
+|      | `draw`          | 선이 그려지고 패킷이 흐른 뒤, 선이 사라지며 반복됩니다.              |
+| 테마 | `light`, `dark` | `dark`는 GitHub 다크 배경을 써서 README에 자연스럽게 섞입니다.       |
+|      | 둘 다           | 둘 다 만들어 README가 뷰어의 모드에 맞춰 바뀌게 합니다(아래 스니펫). |
 
 뷰어의 모드에 맞춰 바꾸려면 GIF 두 개를 이렇게 넣으세요.
 
 ```html
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagram-dark.gif">
-  <img src="diagram-light.gif" alt="architecture diagram">
+  <source media="(prefers-color-scheme: dark)" srcset="diagram-dark.gif" />
+  <img src="diagram-light.gif" alt="architecture diagram" />
 </picture>
 ```
 
@@ -151,19 +156,76 @@ SVG의 첫 프레임만 보여 주는 경우가 많으니 GIF도 함께 두세�
 아이콘을 쓰려면 노드에 `"icon"`을 지정하세요. 맞는 게 없으면 에이전트가 같은 스타일로 새 아이콘을 그리며, 그
 작업에서만 쓰입니다. 전체 목록은 [`references/icons.md`](skills/animated-diagram/references/icons.md)에 있습니다.
 
-## 한계
+## 예제
 
-- 레이아웃은 항상 그룹당 한 열인 왼쪽→오른쪽 열 배치입니다. 위→아래 Mermaid 다이어그램도 이 방식으로 다시 그립니다.
-- 열당 약 7개, 전체 25개 노드, 6열을 넘으면 가독성이 떨어집니다. 더 큰 구조도는 나누세요.
-- 열을 건너뛰는 엣지는 사이 열의 노드 위를 지날 수 있고, `check.py`가 이를 실패로 처리합니다. 그룹 순서를
-  바꾸거나 구조도를 나누세요.
-- 피할 수 없는 교차도 있습니다. 예를 들어 두 출발지가 같은 두 도착지에 모두 연결되는 경우입니다.
+### Mermaid로 만들기
 
-> [!WARNING]
-> 이미지 입력은 에이전트가 읽으며, 결과를 자동으로 검증하는 장치는 없습니다. 에이전트가 추측한 내용을 목록으로
-> 보여 주고 렌더링 전에 확인을 받지만, 노드와 엣지 목록은 직접 확인하세요.
+> `examples/mermaid-architecture.mmd`를 움직이는 GIF로 만들어 줘
 
-레이아웃과 검증 범위에 대한 자세한 내용: [`references/limits.md`](skills/animated-diagram/references/limits.md).
+([`mermaid-architecture.mmd`](skills/animated-diagram/examples/mermaid-architecture.mmd)).
+
+<details>
+<summary>Mermaid 입력</summary>
+
+```text
+flowchart LR
+    subgraph Client
+        UI["web/app.py<br/>UI"]
+    end
+    subgraph API
+        MAIN["main.py<br/>API"]
+        RD[("Redis<br/>memory")]
+    end
+    subgraph Graphs
+        SG[serving_graph]
+        LG["learning_graph<br/>evaluator → reflector → curator"]
+    end
+    subgraph Playbook
+        ST[("Qdrant + SQL<br/>playbook")]
+    end
+    UI -->|POST /chat/stream| MAIN
+    MAIN -->|SSE data| UI
+    MAIN -->|save_user_message / save_ai_message| RD
+    MAIN -->|solution_stream| SG
+    SG -->|token 스트림| MAIN
+    SG -->|bullet 검색| ST
+    MAIN -.->|run_background_learning| LG
+    LG -->|update_playbook_node| ST
+```
+
+</details>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/example-mermaid-dark.gif">
+    <img src="assets/example-mermaid-light.gif" alt="챗 서비스의 클라이언트, API, 그래프, 플레이북을 보여주는 움직이는 구조도" width="900">
+  </picture>
+</p>
+
+### 설명으로 만들기
+
+> CPU 프로세서에서 ALU, 레지스터, L1~L3 캐시의 구조도를 그려주고, 이게 DRAM과 버스로 통신하는 다이어그램을
+> 그려줘. 라인은 처음에 없다가 이어지는 형태로, light 테마로 그려줘
+
+이 요청은 선 표시 방식과 테마를 이미 말하고 있어서 에이전트가 이를 묻지 않습니다. 요청에 없는 부분만
+물어보는데, 여기서는 CPU 안의 화살표 방향이었습니다. CPU 안은 요청 경로를 따라 바깥쪽으로 향하고, 버스 구간은
+양방향입니다.
+
+<p align="center">
+  <img src="assets/example-cpu-ko.gif" alt="ALU, 레지스터, L1~L3 캐시를 가진 CPU가 메모리 버스로 DRAM과 연결된 움직이는 구조도" width="900">
+</p>
+
+### 이미지로 만들기
+
+> (그림을 첨부하고) 이 구조도를 움직이는 GIF로 만들어 줘. light 테마로, 선은 처음부터 이어진 형태로 해 줘
+
+입력은 [Attention Is All You Need](https://arxiv.org/abs/1706.03762)(Vaswani 외, 2017)의 Figure 1이었습니다.
+원본 그림은 이 저장소에 포함하지 않았습니다. 스킬은 그 구조를 새로 그리며, 렌더링 전에 그림에서 읽어 낸 것과
+뺀 것을 목록으로 보여 줍니다. 여기서는 Add & Norm 노드가 잔차 연결을 대신하므로 잔차 선은 뺐습니다.
+
+<p align="center">
+  <img src="assets/example-transformer-ko.gif" alt="인코더, 디코더, 임베딩, 어텐션, 피드 포워드, 선형 층, 소프트맥스로 이루어진 트랜스포머 구조의 움직이는 구조도" width="900">
+</p>
 
 ## 요구 사항
 
