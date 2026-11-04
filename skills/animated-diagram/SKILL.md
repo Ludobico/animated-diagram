@@ -17,8 +17,12 @@ as its structure (step 2). Input: Mermaid flowchart code, a plain-text descripti
 connections, or an image of a diagram (screenshot, photo, whiteboard).
 
 Scripts are in `${CLAUDE_SKILL_DIR}/scripts/`. If that text appears literally (outside Claude Code),
-it means the folder you read this SKILL.md from. Write every output to the user's working directory
-(in a cloud sandbox, the outputs folder), never into the skill folder.
+it means the folder you read this SKILL.md from. Never write into the skill folder.
+
+**Files.** Write the deliverables (the GIF and the animated SVG) to the user's working directory (in a
+cloud sandbox, the outputs folder). Write everything else (Mermaid you saved from the chat, `spec.json`,
+`frames.png`, icon modules you drew, icon previews) to `<work>/`: a new folder whose name is not in use
+yet, next to the deliverables (in a cloud sandbox, outside the outputs folder). Step 5 deletes it.
 
 **Setup.** Python 3.10+. `mermaid_to_spec.py`, `make_diagram.py` and `check.py` use only the standard
 library. `capture.py` and `preview_icon.py` need Pillow and Playwright: run them with `uv run`, which
@@ -47,11 +51,11 @@ Nothing in the input decides these two; they depend on taste and where the GIF w
 ## 2. Build the spec
 
 - **Mermaid** (`flowchart`/`graph`):
-  `python ${CLAUDE_SKILL_DIR}/scripts/mermaid_to_spec.py in.mmd spec.json` (use `-` to read stdin).
+  `python ${CLAUDE_SKILL_DIR}/scripts/mermaid_to_spec.py in.mmd <work>/spec.json` (use `-` to read stdin).
   A `sequenceDiagram` is not converted. Rewrite it as a flowchart: participants become nodes and
   messages become edges, as `examples/mermaid-architecture.mmd` does. Tell the user what you left out
   (message order, self-calls, alt/opt blocks).
-- **Text or image**: write `spec.json` yourself, following these rules:
+- **Text or image**: write `<work>/spec.json` yourself, following these rules:
   1. Copy labels exactly. Do not translate, shorten or correct them. For a multi-line label, the first
      line is `label` and the rest is `sub`.
   2. Do not invent nodes or edges, and do not add components the input lacks.
@@ -99,9 +103,9 @@ output plus `icon` on the two nodes no keyword matched: one core key, and one dr
 ## 3. Render, check, look
 
 ```
-python ${CLAUDE_SKILL_DIR}/scripts/make_diagram.py spec.json out.svg --lines static|draw --theme light|dark [--extra-icons my_icon.py ...]
+python ${CLAUDE_SKILL_DIR}/scripts/make_diagram.py <work>/spec.json out.svg --lines static|draw --theme light|dark [--extra-icons <work>/my_icon.py ...]
 python ${CLAUDE_SKILL_DIR}/scripts/check.py out.svg
-uv run ${CLAUDE_SKILL_DIR}/scripts/capture.py out.svg frames.png 0.5 6
+uv run ${CLAUDE_SKILL_DIR}/scripts/capture.py out.svg <work>/frames.png 0.5 6
 ```
 
 - **Icons**: every node needs a real icon; there is no placeholder. Keywords pick one where they can, and
@@ -111,7 +115,7 @@ uv run ${CLAUDE_SKILL_DIR}/scripts/capture.py out.svg frames.png 0.5 6
 - **Check**: fix every `FAIL` and render again. The usual fixes are node order, `size`, grouping, or
   splitting the diagram. A `warn` (crossing, an edge under a label) can stay, but mention it in the report.
   Known layout limits are in `references/limits.md`.
-- **Look**: open `frames.png` (frames at 0, 2 and 4 s). Check for misleading icons, clipped labels, and
+- **Look**: open `<work>/frames.png` (frames at 0, 2 and 4 s). Check for misleading icons, clipped labels, and
   lines over nodes. With `static`, the first frame must already show every line, arrowhead and label.
 
 ## 4. Capture the GIF
@@ -133,7 +137,11 @@ the user this README snippet:
 </picture>
 ```
 
-## 5. Report
+## 5. Clean up and report
+
+When the deliverables are written and checked, delete `<work>/`. Delete only that folder: never a file
+the user gave you, and never a deliverable. If the job stops on a problem you could not fix, keep
+`<work>/` and give its path, so the user can look at what went wrong.
 
 - Output paths and file sizes, and the line style and theme used (say if they were defaults).
 - What you verified (check results, frames you looked at) and what you did not (for example, you did not

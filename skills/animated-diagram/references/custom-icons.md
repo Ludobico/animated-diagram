@@ -16,7 +16,7 @@ wrong, give each node a real icon:
 1. Pick the two core modules closest in form and read them, for example `scripts/icons/trace.py`
    for a panel, `database.py` for a container, or `queue.py` for a flow. Copy their proportions and
    motion; do not read the whole library.
-2. Write one file per icon outside the skill folder, such as `<workdir>/icons/payment.py`, in the
+2. Write one file per icon in the job's work folder (SKILL.md, "Files"), such as `<work>/payment.py`, in the
    core format. `examples/icons/learning.py` is a complete drawn example.
 
    ```python
@@ -33,8 +33,8 @@ wrong, give each node a real icon:
    <rect x="-22" y="-14" width="44" height="28" rx="4" fill="{paper}" stroke="{ink}" stroke-width="2"/>
    ..."""
    ```
-3. Set `"icon": "payment"` on the node and render with `--extra-icons <workdir>/icons/payment.py`.
-4. Preview: `preview_icon.py strip.png payment --extra-icons <workdir>/icons/payment.py --theme both`.
+3. Set `"icon": "payment"` on the node and render with `--extra-icons <work>/payment.py`.
+4. Preview: `preview_icon.py <work>/strip.png payment --extra-icons <work>/payment.py --theme both`.
    The shape must read at a glance on the light and the dark row, and the motion must visibly change
    across the 8 frames.
 5. `check.py` must pass `ids`, `loop` and `icon` (it catches colours outside the palette and an icon
@@ -86,6 +86,8 @@ than about 3.4, and a shape that duplicates a core icon.
 ## Report and keep
 
 - List each drawn icon in the result: node, key, shape, motion. Say that it was drawn for this job.
-- Drawn icons are throwaway by default. Add one to the core library only when the user asks: copy the
+- Drawn icons are throwaway by default: the cleanup in SKILL.md step 5 deletes them with `<work>/`. If the
+  user wants to keep one, copy it where they say before the cleanup. Add one to the core library only when
+  the user asks: copy the
   file into `scripts/icons/`, add a keyword rule to `_RULES` in `scripts/icons/__init__.py` if it should
   be auto-selected, then run `python -m icons` from `scripts/` to regenerate `references/icons.md`.
